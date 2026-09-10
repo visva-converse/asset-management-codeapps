@@ -1,0 +1,67 @@
+{
+  "version": "1.0",
+  "appId": "b3ba7434-e384-4fa0-b21c-bf8a09c52fbf",
+  "appDisplayName": "Asset Management",
+  "region": "prod",
+  "appType": "CodeApp",
+  "environmentId": "8593d72e-7626-ead7-84be-5bb97af773d8",
+  "description": " ",
+  "buildPath": "./dist",
+  "buildEntryPoint": "index.html",
+  "localAppUrl": "http://localhost:3000",
+  "logoPath": "Default",
+  "connectionReferences": {},
+  "databaseReferences": {
+    "default.cds": {
+      "dataSources": {
+        "assets": {
+          "entitySetName": "cr240_assets",
+          "logicalName": "cr240_asset",
+          "isHidden": false
+        },
+        "assetassignments": {
+          "entitySetName": "cr240_assetassignments",
+          "logicalName": "cr240_assetassignment",
+          "isHidden": false
+        },
+        "assetcategories": {
+          "entitySetName": "cr240_assetcategories",
+          "logicalName": "cr240_assetcategory",
+          "isHidden": false
+        },
+        "assetmaintenances": {
+          "entitySetName": "cr240_assetmaintenances",
+          "logicalName": "cr240_assetmaintenance",
+          "isHidden": false
+        },
+        "assetrequests": {
+          "entitySetName": "cr240_assetrequests",
+          "logicalName": "cr240_assetrequest",
+          "isHidden": false
+        },
+        "locations": {
+          "entitySetName": "cr240_locations",
+          "logicalName": "cr240_location",
+          "isHidden": false
+        },
+        "users": {
+          "entitySetName": "systemusers",
+          "logicalName": "systemuser",
+          "isHidden": false
+        },
+        "roles": {
+          "entitySetName": "roles",
+          "logicalName": "role",
+          "isHidden": false
+        },
+        "systemuserroles": {
+          "entitySetName": "systemuserroles",
+          "logicalName": "systemuserroles",
+          "isHidden": false
+        }
+      },
+
+      "environmentVariableName": ""
+    }
+  }
+}
