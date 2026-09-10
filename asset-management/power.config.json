@@ -48,19 +48,8 @@
           "entitySetName": "systemusers",
           "logicalName": "systemuser",
           "isHidden": false
-        },
-        "roles": {
-          "entitySetName": "roles",
-          "logicalName": "role",
-          "isHidden": false
-        },
-        "systemuserroles": {
-          "entitySetName": "systemuserroles",
-          "logicalName": "systemuserroles",
-          "isHidden": false
         }
       },
-
       "environmentVariableName": ""
     }
   }

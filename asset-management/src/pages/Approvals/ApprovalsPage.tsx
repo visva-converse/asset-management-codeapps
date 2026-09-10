@@ -124,144 +124,213 @@ export const ApprovalsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">Manager Approvals</h2>
-            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">
-              {pendingRequests.length} Pending
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Review and adjudicate corporate equipment requisitions awaiting manager authorization
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-          onClick={loadPending}
-        >
-          Refresh Queue
-        </Button>
-      </div>
-
-      {/* Governance Banner */}
-      <div className="flex items-start gap-3 p-4 bg-blue-50/70 border border-blue-200/80 rounded-xl text-xs text-blue-900">
-        <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-        <div>
-          <span className="font-semibold block text-sm">Automated Approval Compliance</span>
-          <p className="text-blue-700/90 mt-0.5 leading-relaxed">
-            Approving a request updates Microsoft Dataverse status code to <code className="bg-blue-100 px-1 py-0.5 rounded">Approved (805530001)</code> and notifies the Asset Administrator for equipment dispatch. Rejections require an audited rationale.
-          </p>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search pending approvals by request #, employee, or item..."
-        />
-      </div>
-
-      {/* Content Queue */}
-      {isLoading ? (
-        <TableSkeleton rows={4} cols={5} />
-      ) : filteredRequests.length === 0 ? (
-        <EmptyState
-          icon={<Clock className="w-8 h-8 text-emerald-600" />}
-          title="Approvals queue is clear"
-          description="All submitted hardware requests have been reviewed and adjudicated. New employee submissions will appear here automatically."
-        />
-      ) : (
-        <div className="space-y-4">
-          {filteredRequests.map((req) => (
-            <div
-              key={req.id}
-              className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5"
-            >
-              {/* Left Details */}
-              <div className="space-y-2 flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                    {req.requestNumber}
-                  </span>
-                  <h3 className="text-base font-bold text-slate-900 truncate">
-                    {req.requestName}
-                  </h3>
-                  {getPriorityBadge(req.priority)}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-slate-500">
-                  <div>
-                    Employee: <strong className="text-slate-800">{req.requestedBy}</strong> (
-                    {req.requestedByEmail})
-                  </div>
-                  <div>
-                    Category: <strong className="text-slate-700">{req.categoryName || 'General'}</strong>
-                  </div>
-                  <div>
-                    Requested Date: <span className="text-slate-700">{req.requestDate}</span>
-                  </div>
-                </div>
-
-                <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200/70">
-                  <span className="font-semibold text-slate-700 block mb-0.5">
-                    Business Justification:
-                  </span>
-                  <p className="line-clamp-2">{req.businessJustification || 'No justification provided.'}</p>
-                </div>
-              </div>
-
-              {/* Right Action Buttons */}
-              <div className="flex items-center gap-2 self-end md:self-center shrink-0">
-                {hasPermission(AppPermissions.REJECT_REQUEST) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leftIcon={<X className="w-4 h-4 text-rose-600" />}
-                    onClick={() => setRejectingRequest(req)}
-                    className="hover:border-rose-300 hover:bg-rose-50/50"
-                  >
-                    Reject
-                  </Button>
-                )}
-
-                {hasPermission(AppPermissions.APPROVE_REQUEST) && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    leftIcon={<Check className="w-4 h-4" />}
-                    onClick={() => setApprovingRequest(req)}
-                    className="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
-                  >
-                    Approve
-                  </Button>
-                )}
-              </div>
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      {/* Fixed Page Header & Context (Does NOT scroll) */}
+      <div className="shrink-0 space-y-2.5 mb-3">
+        {/* Title, Badge & Primary Action */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                Manager Approvals Queue
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200/70">
+                {pendingRequests.length} Pending Requests
+              </span>
             </div>
-          ))}
+            <p className="text-xs text-slate-500 mt-0.5">
+              Review and adjudicate corporate equipment requisitions awaiting manager authorization and compliance sign-off.
+            </p>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
+            onClick={loadPending}
+            disabled={isLoading}
+          >
+            Refresh Queue
+          </Button>
         </div>
-      )}
+
+        {/* Approval Compliance & Audit Trail Banner */}
+        <div className="flex items-start gap-2.5 p-3 bg-blue-50/70 border border-blue-200/80 rounded-lg text-xs text-blue-900">
+          <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+          <div className="leading-relaxed">
+            <span className="font-bold text-blue-950">Approval Compliance & Audit Trail: </span>
+            Approving updates the Dataverse lifecycle status to <code className="bg-blue-100 text-blue-800 px-1 py-0.5 rounded text-[11px] font-mono">Approved (805530001)</code> and routes fulfillment to the Asset Administrator. Rejections require an audited rationale.
+          </div>
+        </div>
+
+        {/* Search & Filter Bar */}
+        <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          <div className="flex-1 min-w-0">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Search approvals queue by request #, requested by, or asset item..."
+            />
+          </div>
+          {search && (
+            <div className="text-xs text-slate-500 shrink-0 self-center">
+              Found {filteredRequests.length} of {pendingRequests.length}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Scrollable Data Area (ONLY this section vertically scrolls) */}
+      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-lg border border-slate-200/90 shadow-2xs overflow-hidden">
+        {isLoading ? (
+          <div className="p-4 flex-1 overflow-auto">
+            <TableSkeleton rows={5} cols={6} />
+          </div>
+        ) : filteredRequests.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
+            <EmptyState
+              icon={<Clock className="w-8 h-8 text-emerald-600" />}
+              title="Approvals Queue is Clear"
+              description={
+                search
+                  ? 'No pending requisitions matched your search query.'
+                  : 'All corporate equipment requests have been adjudicated. New employee submissions will appear here automatically.'
+              }
+            />
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 overflow-auto relative">
+            <table className="w-full text-left text-xs border-collapse min-w-[840px]">
+              {/* Sticky Table Header */}
+              <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase tracking-wider text-[11px] shadow-2xs">
+                <tr>
+                  <th className="py-2.5 px-4 font-bold">Request ID</th>
+                  <th className="py-2.5 px-4 font-bold">Asset / Requisition Item</th>
+                  <th className="py-2.5 px-4 font-bold">Requested By</th>
+                  <th className="py-2.5 px-4 font-bold">Submitted On</th>
+                  <th className="py-2.5 px-4 font-bold">Priority</th>
+                  <th className="py-2.5 px-4 font-bold">Approval Status</th>
+                  <th className="py-2.5 px-4 font-bold text-right">Approval Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredRequests.map((req) => (
+                  <tr
+                    key={req.id}
+                    className="hover:bg-slate-50/70 transition-colors group"
+                  >
+                    {/* Request ID */}
+                    <td className="py-3 px-4 font-mono font-bold text-blue-700 align-top">
+                      <span className="bg-blue-50/90 px-2 py-1 rounded border border-blue-200/80 inline-block text-[11px]">
+                        {req.requestNumber}
+                      </span>
+                    </td>
+
+                    {/* Asset / Item & Justification */}
+                    <td className="py-3 px-4 align-top max-w-[280px]">
+                      <div className="font-bold text-slate-900 text-xs">
+                        {req.requestName}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-medium">
+                          {req.categoryName || 'General Equipment'}
+                        </span>
+                      </div>
+                      {req.businessJustification && (
+                        <p
+                          className="text-[11px] text-slate-600 mt-1 line-clamp-2 leading-relaxed italic bg-slate-50 p-1.5 rounded border border-slate-200/60"
+                          title={req.businessJustification}
+                        >
+                          "{req.businessJustification}"
+                        </p>
+                      )}
+                    </td>
+
+                    {/* Requester Details */}
+                    <td className="py-3 px-4 align-top text-slate-700">
+                      <div className="font-semibold text-slate-900">{req.requestedBy}</div>
+                      <div className="text-[11px] text-slate-500 truncate max-w-[180px]">
+                        {req.requestedByEmail}
+                      </div>
+                    </td>
+
+                    {/* Submitted Date */}
+                    <td className="py-3 px-4 align-top text-slate-600 font-medium whitespace-nowrap">
+                      {req.requestDate}
+                    </td>
+
+                    {/* Priority */}
+                    <td className="py-3 px-4 align-top whitespace-nowrap">
+                      {getPriorityBadge(req.priority)}
+                    </td>
+
+                    {/* Approval Status */}
+                    <td className="py-3 px-4 align-top whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        Pending Authorization
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-3 px-4 align-top text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {hasPermission(AppPermissions.REJECT_REQUEST) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            leftIcon={<X className="w-3.5 h-3.5 text-rose-600" />}
+                            onClick={() => setRejectingRequest(req)}
+                            className="hover:border-rose-300 hover:bg-rose-50/50 text-xs py-1"
+                          >
+                            Reject
+                          </Button>
+                        )}
+
+                        {hasPermission(AppPermissions.APPROVE_REQUEST) && (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            leftIcon={<Check className="w-3.5 h-3.5" />}
+                            onClick={() => setApprovingRequest(req)}
+                            className="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 text-xs py-1"
+                          >
+                            Approve
+                          </Button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Stable Table Footer / Summary Bar */}
+        <div className="shrink-0 py-2 px-4 bg-slate-50/80 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center select-none">
+          <span>
+            Queue: <strong className="text-slate-700">{filteredRequests.length}</strong> active item(s)
+          </span>
+          <span className="text-[11px] text-slate-400">
+            Adjudication decisions recorded to audit trail
+          </span>
+        </div>
+      </div>
 
       {/* Approve Confirmation Dialog */}
       <ConfirmDialog
         isOpen={!!approvingRequest}
         onClose={() => setApprovingRequest(null)}
         onConfirm={handleApproveConfirm}
-        title="Approve Hardware Request"
-        message={`Authorize request ${approvingRequest?.requestNumber} for ${approvingRequest?.requestedBy}? This updates Dataverse and assigns fulfillment to the Asset Administrator.`}
-        confirmText="Confirm Approval"
+        title="Authorize Corporate Hardware Requisition"
+        message={`Confirm manager authorization for request ${approvingRequest?.requestNumber} submitted by ${approvingRequest?.requestedBy}? Upon approval, Dataverse will assign fulfillment to the Asset Administrator.`}
+        confirmText="Authorize Request"
         variant="primary"
         isLoading={isSubmitting}
       />
 
-      {/* Rejection Dialog */}
+      {/* Rejection Dialog with Audited Reason */}
       <RejectionDialog
         request={rejectingRequest}
         isOpen={!!rejectingRequest}

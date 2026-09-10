@@ -151,137 +151,163 @@ export const RequestsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            {isEmployee ? 'My Hardware Requests' : 'All Asset Requests'}
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {isEmployee
-              ? 'Track your submitted equipment requisitions and approval status'
-              : 'Review organization-wide hardware requisitions and approvals'}
-          </p>
-        </div>
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      {/* Fixed Page Header & Context (Does NOT scroll) */}
+      <div className="shrink-0 space-y-2.5 mb-3">
+        {/* Title, Badge & Primary Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                {isEmployee ? 'My Equipment Requests' : 'Hardware Requisitions Queue'}
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                {filteredRequests.length} Requests
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {isEmployee
+                ? 'Track your submitted equipment requisitions, approvals, and dispatch progress'
+                : 'Manage organization-wide hardware requisitions, approvals, and fulfillment status'}
+            </p>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-            onClick={loadRequests}
-          >
-            Refresh
-          </Button>
-
-          {hasPermission(AppPermissions.CREATE_REQUEST) && (
+          <div className="flex items-center gap-2 shrink-0">
             <Button
-              variant="primary"
+              variant="outline"
               size="sm"
-              leftIcon={<Plus className="w-4 h-4" />}
-              onClick={() => setIsCreateOpen(true)}
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
+              onClick={loadRequests}
+              disabled={isLoading}
             >
-              New Request
+              Refresh
             </Button>
-          )}
+
+            {hasPermission(AppPermissions.CREATE_REQUEST) && (
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus className="w-4 h-4" />}
+                onClick={() => setIsCreateOpen(true)}
+              >
+                New Request
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Filter and Search Bar */}
+        <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-slate-200/90 shadow-2xs">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            <div className="flex-1 min-w-0">
+              <SearchInput
+                value={search}
+                onChange={(val) => {
+                  setSearch(val);
+                  setCurrentPage(1);
+                }}
+                placeholder="Search by request #, title, requester, or category..."
+              />
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+              <span className="text-xs text-slate-500 font-medium">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="w-full sm:w-80">
-          <SearchInput
-            value={search}
-            onChange={(val) => {
-              setSearch(val);
-              setCurrentPage(1);
-            }}
-            placeholder="Search by request #, title, or requester..."
-          />
-        </div>
-
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <span className="text-xs text-slate-500 font-medium">Status:</span>
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Content */}
-      {isLoading ? (
-        <TableSkeleton rows={5} cols={6} />
-      ) : filteredRequests.length === 0 ? (
-        <EmptyState
-          icon={<ClipboardList className="w-8 h-8" />}
-          title="No requests found"
-          description={
-            isEmployee
-              ? 'You have not submitted any hardware requests yet.'
-              : 'No equipment requests match the current filters.'
-          }
-          actionText={
-            hasPermission(AppPermissions.CREATE_REQUEST) ? 'Submit a Request' : undefined
-          }
-          onAction={() => setIsCreateOpen(true)}
-        />
-      ) : (
-        <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/90 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
+      {/* Scrollable Data Area (ONLY this section vertically scrolls) */}
+      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-lg border border-slate-200/90 shadow-2xs overflow-hidden">
+        {isLoading ? (
+          <div className="p-4 flex-1 overflow-auto">
+            <TableSkeleton rows={5} cols={6} />
+          </div>
+        ) : filteredRequests.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
+            <EmptyState
+              icon={<ClipboardList className="w-8 h-8" />}
+              title="No requests found"
+              description={
+                isEmployee
+                  ? 'You have not submitted any hardware requests yet.'
+                  : 'No equipment requests match the current filters.'
+              }
+              actionText={
+                hasPermission(AppPermissions.CREATE_REQUEST) ? 'Submit a Request' : undefined
+              }
+              onAction={() => setIsCreateOpen(true)}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 overflow-auto relative">
+            <table className="w-full text-left text-xs border-collapse min-w-[760px]">
+              {/* Sticky Table Header */}
+              <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase tracking-wider text-[11px] shadow-2xs">
                 <tr>
-                  <th className="py-3 px-5">Request #</th>
-                  <th className="py-3 px-4">Item & Title</th>
-                  <th className="py-3 px-4">Category</th>
-                  {!isEmployee && <th className="py-3 px-4">Requester</th>}
-                  <th className="py-3 px-4">Requested Date</th>
-                  <th className="py-3 px-4">Priority</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-5 text-right">Actions</th>
+                  <th className="py-2.5 px-4 font-bold">Request #</th>
+                  <th className="py-2.5 px-4 font-bold">Item & Title</th>
+                  <th className="py-2.5 px-4 font-bold">Category</th>
+                  {!isEmployee && <th className="py-2.5 px-4 font-bold">Requester</th>}
+                  <th className="py-2.5 px-4 font-bold">Requested Date</th>
+                  <th className="py-2.5 px-4 font-bold">Priority</th>
+                  <th className="py-2.5 px-4 font-bold">Status</th>
+                  <th className="py-2.5 px-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedRequests.map((req) => (
-                  <tr key={req.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-5 font-mono font-semibold text-blue-700">
-                      {req.requestNumber}
+                  <tr key={req.id} className="hover:bg-slate-50/70 transition-colors group">
+                    <td className="py-2.5 px-4 font-mono font-semibold text-blue-700">
+                      <span className="bg-blue-50/80 px-2 py-0.5 rounded border border-blue-200/70 inline-block text-[11px]">
+                        {req.requestNumber}
+                      </span>
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-900">
+                    <td className="py-2.5 px-4 font-semibold text-slate-900">
                       {req.requestName}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-700">
-                      {req.categoryName || 'General'}
+                    <td className="py-2.5 px-4 text-slate-700">
+                      <span className="bg-slate-100 px-1.5 py-0.5 rounded font-medium text-[11px]">
+                        {req.categoryName || 'General'}
+                      </span>
                     </td>
                     {!isEmployee && (
-                      <td className="py-3.5 px-4 text-slate-700">
-                        <div className="font-medium">{req.requestedBy}</div>
-                        <div className="text-[11px] text-slate-400">{req.requestedByEmail}</div>
+                      <td className="py-2.5 px-4 text-slate-700">
+                        <div className="font-semibold text-slate-900">{req.requestedBy}</div>
+                        <div className="text-[11px] text-slate-400 truncate max-w-[150px]">
+                          {req.requestedByEmail}
+                        </div>
                       </td>
                     )}
-                    <td className="py-3.5 px-4 text-slate-600">{req.requestDate}</td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-2.5 px-4 text-slate-600 font-medium whitespace-nowrap">
+                      {req.requestDate}
+                    </td>
+                    <td className="py-2.5 px-4 whitespace-nowrap">
                       <span className="font-semibold text-slate-700">{req.priority}</span>
                     </td>
-                    <td className="py-3.5 px-4">{getStatusBadge(req.status)}</td>
-                    <td className="py-3.5 px-5 text-right">
+                    <td className="py-2.5 px-4 whitespace-nowrap">{getStatusBadge(req.status)}</td>
+                    <td className="py-2.5 px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
                         <button
+                          type="button"
                           onClick={() => setSelectedRequest(req)}
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer focus-visible:ring-1 focus-visible:ring-blue-500"
                           title="View Request Details"
+                          aria-label="View Request Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -289,9 +315,11 @@ export const RequestsPage: React.FC = () => {
                         {/* Cancel request button when allowed (status is Pending) */}
                         {req.status === 'Pending' && (
                           <button
+                            type="button"
                             onClick={() => setCancelingRequest(req)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer focus-visible:ring-1 focus-visible:ring-blue-500"
                             title="Cancel Request"
+                            aria-label="Cancel Request"
                           >
                             <XCircle className="w-4 h-4" />
                           </button>
@@ -303,7 +331,10 @@ export const RequestsPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+        )}
 
+        {/* Stable Pagination Footer */}
+        <div className="shrink-0 border-t border-slate-200 bg-white">
           <Pagination
             currentPage={currentPage}
             totalItems={filteredRequests.length}
@@ -315,7 +346,7 @@ export const RequestsPage: React.FC = () => {
             }}
           />
         </div>
-      )}
+      </div>
 
       {/* Create Request Modal */}
       <RequestCreateModal

@@ -1,39 +1,24 @@
-import type { DataverseRole } from '../types';
 import type { AppPermission } from './permissions';
-import { ROLE_PERMISSIONS } from './role-permissions';
 
 export class PermissionService {
   /**
-   * Checks whether a set of Dataverse roles grants a specific application permission.
+   * Checks whether the effective permission set contains a specific permission.
+   *
+   * The set is derived from the user's cumulative Dataverse privileges
+   * (RetrieveUserPrivileges) at startup and is immutable for the session.
    */
   public static hasPermission(
-    roles: DataverseRole | DataverseRole[],
+    permissions: Set<AppPermission>,
     permission: AppPermission
   ): boolean {
-    const roleList = Array.isArray(roles) ? roles : [roles];
-    for (const role of roleList) {
-      const perms = ROLE_PERMISSIONS[role];
-      if (perms && perms.includes(permission)) {
-        return true;
-      }
-    }
-    return false;
+    return permissions.has(permission);
   }
 
   /**
-   * Gets all distinct permissions granted across the given roles.
+   * Returns true if the permission set is non-empty (user has at least one
+   * mapped Dataverse privilege).
    */
-  public static getAllPermissions(roles: DataverseRole | DataverseRole[]): Set<AppPermission> {
-    const roleList = Array.isArray(roles) ? roles : [roles];
-    const permSet = new Set<AppPermission>();
-    for (const role of roleList) {
-      const perms = ROLE_PERMISSIONS[role];
-      if (perms) {
-        for (const p of perms) {
-          permSet.add(p);
-        }
-      }
-    }
-    return permSet;
+  public static hasAnyPermission(permissions: Set<AppPermission>): boolean {
+    return permissions.size > 0;
   }
 }

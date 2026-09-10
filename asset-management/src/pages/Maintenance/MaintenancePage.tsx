@@ -167,168 +167,182 @@ export const MaintenancePage: React.FC = () => {
   }, [records]);
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            Maintenance & Service Logs
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Track preventive servicing, repairs, calibration, and vendor maintenance costs
-          </p>
-        </div>
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      {/* Fixed Page Header, KPIs & Context (Does NOT scroll) */}
+      <div className="shrink-0 space-y-2.5 mb-3">
+        {/* Title, Badge & Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                Maintenance & Service Work Orders
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                {filteredRecords.length} Records
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Track preventive servicing, hardware repairs, calibration, and vendor maintenance costs.
+            </p>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-            onClick={loadMaintenance}
-          >
-            Refresh
-          </Button>
-
-          {hasPermission(AppPermissions.MANAGE_MAINTENANCE) && (
+          <div className="flex items-center gap-2 shrink-0">
             <Button
-              variant="primary"
+              variant="outline"
               size="sm"
-              leftIcon={<Plus className="w-4 h-4" />}
-              onClick={() => setIsCreateOpen(true)}
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
+              onClick={loadMaintenance}
+              disabled={isLoading}
             >
-              Schedule Service
+              Refresh
             </Button>
-          )}
-        </div>
-      </div>
 
-      {/* Metric summary banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
-          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg">
-            <Activity className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-500 font-medium">Total Work Orders</div>
-            <div className="text-lg font-bold text-slate-900">{records.length} Records</div>
+            {hasPermission(AppPermissions.MANAGE_MAINTENANCE) && (
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus className="w-4 h-4" />}
+                onClick={() => setIsCreateOpen(true)}
+              >
+                Schedule Service
+              </Button>
+            )}
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
-          <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg">
-            <AlertCircle className="w-5 h-5" />
+        {/* Metric Summary KPI Banner */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-slate-200/90 shadow-2xs flex items-center gap-3">
+            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg shrink-0">
+              <Activity className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] text-slate-500 font-medium truncate">Total Work Orders</div>
+              <div className="text-base font-bold text-slate-900 leading-tight">{records.length} Records</div>
+            </div>
           </div>
-          <div>
-            <div className="text-xs text-slate-500 font-medium">Active / In Progress</div>
-            <div className="text-lg font-bold text-slate-900">
-              {records.filter((r) => r.status === 'Scheduled' || r.status === 'In Progress').length} Open
+
+          <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-slate-200/90 shadow-2xs flex items-center gap-3">
+            <div className="p-2 bg-amber-50 text-amber-600 rounded-lg shrink-0">
+              <AlertCircle className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] text-slate-500 font-medium truncate">Active / In Progress</div>
+              <div className="text-base font-bold text-slate-900 leading-tight">
+                {records.filter((r) => r.status === 'Scheduled' || r.status === 'In Progress').length} Open
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-slate-200/90 shadow-2xs flex items-center gap-3">
+            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
+              <DollarSign className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] text-slate-500 font-medium truncate">Cumulative Service Cost</div>
+              <div className="text-base font-bold text-slate-900 leading-tight">${totalCost.toLocaleString()}</div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg">
-            <DollarSign className="w-5 h-5" />
+        {/* Filters */}
+        <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-slate-200/90 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
+          <div className="flex-1 min-w-0">
+            <SearchInput
+              value={search}
+              onChange={(val) => {
+                setSearch(val);
+                setCurrentPage(1);
+              }}
+              placeholder="Search by asset, operation, title, or technician..."
+            />
           </div>
-          <div>
-            <div className="text-xs text-slate-500 font-medium">Cumulative Service Cost</div>
-            <div className="text-lg font-bold text-slate-900">${totalCost.toLocaleString()}</div>
+
+          <div className="flex flex-wrap items-center gap-2 self-end md:self-auto shrink-0">
+            <select
+              value={typeFilter}
+              onChange={(e) => {
+                setTypeFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="ALL">All Maintenance Types</option>
+              <option value="Preventive">Preventive</option>
+              <option value="Corrective">Corrective</option>
+              <option value="Predictive">Predictive</option>
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="Scheduled">Scheduled</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+            </select>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
-        <div className="w-full md:w-80">
-          <SearchInput
-            value={search}
-            onChange={(val) => {
-              setSearch(val);
-              setCurrentPage(1);
-            }}
-            placeholder="Search by asset, operation, or tech..."
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 self-end md:self-auto">
-          <select
-            value={typeFilter}
-            onChange={(e) => {
-              setTypeFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="ALL">All Maintenance Types</option>
-            <option value="Preventive">Preventive</option>
-            <option value="Corrective">Corrective</option>
-            <option value="Predictive">Predictive</option>
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="Scheduled">Scheduled</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Completed">Completed</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Content Table */}
-      {isLoading ? (
-        <TableSkeleton rows={5} cols={6} />
-      ) : filteredRecords.length === 0 ? (
-        <EmptyState
-          icon={<Wrench className="w-8 h-8" />}
-          title="No maintenance records found"
-          description="No work orders or maintenance activities match the current filters."
-          actionText={
-            hasPermission(AppPermissions.MANAGE_MAINTENANCE) ? 'Schedule Service' : undefined
-          }
-          onAction={() => setIsCreateOpen(true)}
-        />
-      ) : (
-        <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/90 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
+      {/* Scrollable Data Area (ONLY this section vertically scrolls) */}
+      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-lg border border-slate-200/90 shadow-2xs overflow-hidden">
+        {isLoading ? (
+          <div className="p-4 flex-1 overflow-auto">
+            <TableSkeleton rows={5} cols={6} />
+          </div>
+        ) : filteredRecords.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
+            <EmptyState
+              icon={<Wrench className="w-8 h-8" />}
+              title="No maintenance records found"
+              description="No work orders or maintenance activities match the current filters."
+              actionText={
+                hasPermission(AppPermissions.MANAGE_MAINTENANCE) ? 'Schedule Service' : undefined
+              }
+              onAction={() => setIsCreateOpen(true)}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 overflow-auto relative">
+            <table className="w-full text-left text-xs border-collapse min-w-[760px]">
+              {/* Sticky Table Header */}
+              <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase tracking-wider text-[11px] shadow-2xs">
                 <tr>
-                  <th className="py-3 px-5">Work Order & Operation</th>
-                  <th className="py-3 px-4">Hardware Asset</th>
-                  <th className="py-3 px-4">Type</th>
-                  <th className="py-3 px-4">Service Date</th>
-                  <th className="py-3 px-4">Cost</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-5 text-right">Actions</th>
+                  <th className="py-2.5 px-4 font-bold">Work Order & Operation</th>
+                  <th className="py-2.5 px-4 font-bold">Hardware Asset</th>
+                  <th className="py-2.5 px-4 font-bold">Type</th>
+                  <th className="py-2.5 px-4 font-bold">Service Date</th>
+                  <th className="py-2.5 px-4 font-bold">Cost</th>
+                  <th className="py-2.5 px-4 font-bold">Status</th>
+                  <th className="py-2.5 px-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedRecords.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-5">
+                  <tr key={item.id} className="hover:bg-slate-50/70 transition-colors group">
+                    <td className="py-2.5 px-4">
                       <div className="font-semibold text-slate-900">{item.title}</div>
                       <div className="text-[11px] text-slate-500">
                         Tech: {item.technician || 'Internal Support'}
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 font-medium text-slate-800">
+                    <td className="py-2.5 px-4 font-medium text-slate-800">
                       <div>{item.assetName}</div>
-                      <div className="text-[11px] text-slate-400">ID: {item.assetId}</div>
+                      <div className="text-[11px] text-slate-400 font-mono">ID: {item.assetId}</div>
                     </td>
-                    <td className="py-3.5 px-4">{getTypeBadge(item.type)}</td>
-                    <td className="py-3.5 px-4 text-slate-600">{item.maintenanceDate}</td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-900">
+                    <td className="py-2.5 px-4 whitespace-nowrap">{getTypeBadge(item.type)}</td>
+                    <td className="py-2.5 px-4 text-slate-600 whitespace-nowrap">{item.maintenanceDate}</td>
+                    <td className="py-2.5 px-4 font-semibold text-slate-900 whitespace-nowrap">
                       ${item.cost.toLocaleString()}
                     </td>
-                    <td className="py-3.5 px-4">{getStatusBadge(item.status)}</td>
-                    <td className="py-3.5 px-5 text-right">
+                    <td className="py-2.5 px-4 whitespace-nowrap">{getStatusBadge(item.status)}</td>
+                    <td className="py-2.5 px-4 text-right whitespace-nowrap">
                       {item.status !== 'Completed' &&
                         hasPermission(AppPermissions.MANAGE_MAINTENANCE) && (
                           <Button
@@ -336,6 +350,7 @@ export const MaintenancePage: React.FC = () => {
                             size="sm"
                             leftIcon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
                             onClick={() => setCompletingItem(item)}
+                            className="text-xs py-1"
                           >
                             Mark Completed
                           </Button>
@@ -346,7 +361,10 @@ export const MaintenancePage: React.FC = () => {
               </tbody>
             </table>
           </div>
+        )}
 
+        {/* Stable Pagination Footer */}
+        <div className="shrink-0 border-t border-slate-200 bg-white">
           <Pagination
             currentPage={currentPage}
             totalItems={filteredRecords.length}
@@ -358,7 +376,7 @@ export const MaintenancePage: React.FC = () => {
             }}
           />
         </div>
-      )}
+      </div>
 
       {/* Schedule Modal */}
       <MaintenanceModal

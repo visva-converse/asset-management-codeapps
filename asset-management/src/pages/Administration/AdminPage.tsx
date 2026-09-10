@@ -163,162 +163,183 @@ export const AdminPage: React.FC<AdminPageProps> = ({ initialTab = 'categories' 
   const canManageLocations = hasPermission(AppPermissions.MANAGE_LOCATIONS);
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            System Administration
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Configure enterprise taxonomies: asset categories and facility physical locations
-          </p>
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      {/* Fixed Page Header & Context (Does NOT scroll) */}
+      <div className="shrink-0 space-y-2.5 mb-3">
+        {/* Title, Subtitle & Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                System Administration
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                Taxonomies & Master Data
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Configure enterprise taxonomies: asset categories and facility physical locations.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
+              onClick={loadData}
+              disabled={isLoading}
+            >
+              Refresh
+            </Button>
+
+            {activeTab === 'categories' && canManageCategories && (
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus className="w-4 h-4" />}
+                onClick={() => {
+                  setEditingCategory(null);
+                  setIsCategoryModalOpen(true);
+                }}
+              >
+                Add Category
+              </Button>
+            )}
+
+            {activeTab === 'locations' && canManageLocations && (
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus className="w-4 h-4" />}
+                onClick={() => {
+                  setEditingLocation(null);
+                  setIsLocationModalOpen(true);
+                }}
+              >
+                Add Location
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-            onClick={loadData}
-          >
-            Refresh
-          </Button>
-
-          {activeTab === 'categories' && canManageCategories && (
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={<Plus className="w-4 h-4" />}
+        {/* Tabs */}
+        <div className="flex items-center gap-2 border-b border-slate-200">
+          {canManageCategories && (
+            <button
+              type="button"
               onClick={() => {
-                setEditingCategory(null);
-                setIsCategoryModalOpen(true);
+                setActiveTab('categories');
+                setSearch('');
               }}
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
+                activeTab === 'categories'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
             >
-              Add Category
-            </Button>
+              <Tags className="w-3.5 h-3.5" />
+              <span>Asset Categories ({categories.length})</span>
+            </button>
           )}
 
-          {activeTab === 'locations' && canManageLocations && (
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={<Plus className="w-4 h-4" />}
+          {canManageLocations && (
+            <button
+              type="button"
               onClick={() => {
-                setEditingLocation(null);
-                setIsLocationModalOpen(true);
+                setActiveTab('locations');
+                setSearch('');
               }}
+              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold border-b-2 transition-colors cursor-pointer ${
+                activeTab === 'locations'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
             >
-              Add Location
-            </Button>
+              <MapPin className="w-3.5 h-3.5" />
+              <span>Facility Locations ({locations.length})</span>
+            </button>
           )}
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200">
-        {canManageCategories && (
-          <button
-            onClick={() => {
-              setActiveTab('categories');
-              setSearch('');
-            }}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+        {/* Search Input */}
+        <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-slate-200/90 shadow-2xs">
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder={
               activeTab === 'categories'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Tags className="w-4 h-4" />
-            <span>Asset Categories ({categories.length})</span>
-          </button>
-        )}
-
-        {canManageLocations && (
-          <button
-            onClick={() => {
-              setActiveTab('locations');
-              setSearch('');
-            }}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
-              activeTab === 'locations'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <MapPin className="w-4 h-4" />
-            <span>Facility Locations ({locations.length})</span>
-          </button>
-        )}
+                ? 'Search categories by name or ID...'
+                : 'Search facility locations by name or site code...'
+            }
+          />
+        </div>
       </div>
 
-      {/* Search Input */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder={
-            activeTab === 'categories' ? 'Search categories...' : 'Search facility locations...'
-          }
-        />
-      </div>
-
-      {/* Categories Content */}
+      {/* Categories Scrollable Table Area */}
       {activeTab === 'categories' && (
-        <>
+        <div className="flex-1 min-h-0 flex flex-col bg-white rounded-lg border border-slate-200/90 shadow-2xs overflow-hidden">
           {isLoading ? (
-            <TableSkeleton rows={4} cols={4} />
+            <div className="p-4 flex-1 overflow-auto">
+              <TableSkeleton rows={4} cols={4} />
+            </div>
           ) : filteredCategories.length === 0 ? (
-            <EmptyState
-              icon={<Tags className="w-8 h-8" />}
-              title="No categories found"
-              description="No asset categories match your search."
-              actionText={canManageCategories ? 'Create First Category' : undefined}
-              onAction={() => {
-                setEditingCategory(null);
-                setIsCategoryModalOpen(true);
-              }}
-            />
+            <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
+              <EmptyState
+                icon={<Tags className="w-8 h-8" />}
+                title="No categories found"
+                description="No asset categories match your search criteria."
+                actionText={canManageCategories ? 'Create First Category' : undefined}
+                onAction={() => {
+                  setEditingCategory(null);
+                  setIsCategoryModalOpen(true);
+                }}
+              />
+            </div>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/90 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
+            <div className="flex-1 min-h-0 overflow-auto relative">
+              <table className="w-full text-left text-xs border-collapse min-w-[680px]">
+                <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase tracking-wider text-[11px] shadow-2xs">
                   <tr>
-                    <th className="py-3 px-5">Category Name</th>
-                    <th className="py-3 px-4">Identifier</th>
-                    <th className="py-3 px-4">Created Date</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-5 text-right">Actions</th>
+                    <th className="py-2.5 px-4 font-bold">Category Name</th>
+                    <th className="py-2.5 px-4 font-bold">Identifier</th>
+                    <th className="py-2.5 px-4 font-bold">Created Date</th>
+                    <th className="py-2.5 px-4 font-bold">Status</th>
+                    <th className="py-2.5 px-4 font-bold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredCategories.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3.5 px-5 font-semibold text-slate-900">{c.name}</td>
-                      <td className="py-3.5 px-4 font-mono text-slate-400 text-[11px]">{c.id}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{c.createdOn || '—'}</td>
-                      <td className="py-3.5 px-4">
+                    <tr key={c.id} className="hover:bg-slate-50/70 transition-colors group">
+                      <td className="py-2.5 px-4 font-semibold text-slate-900">{c.name}</td>
+                      <td className="py-2.5 px-4 font-mono text-slate-400 text-[11px]">{c.id}</td>
+                      <td className="py-2.5 px-4 text-slate-600">{c.createdOn || '—'}</td>
+                      <td className="py-2.5 px-4">
                         <Badge variant={c.isActive ? 'success' : 'neutral'}>
                           {c.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </td>
-                      <td className="py-3.5 px-5 text-right">
+                      <td className="py-2.5 px-4 text-right">
                         {canManageCategories && (
                           <div className="flex items-center justify-end gap-1">
                             <button
+                              type="button"
                               onClick={() => {
                                 setEditingCategory(c);
                                 setIsCategoryModalOpen(true);
                               }}
-                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer focus-visible:ring-1 focus-visible:ring-blue-500"
                               title="Edit Category"
+                              aria-label="Edit Category"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => setDeletingCategory(c)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer focus-visible:ring-1 focus-visible:ring-blue-500"
                               title="Delete Category"
+                              aria-label="Delete Category"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -331,65 +352,80 @@ export const AdminPage: React.FC<AdminPageProps> = ({ initialTab = 'categories' 
               </table>
             </div>
           )}
-        </>
+
+          {/* Stable Summary Footer */}
+          <div className="shrink-0 py-2 px-4 bg-slate-50/80 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center select-none">
+            <span>
+              Categories: <strong className="text-slate-700">{filteredCategories.length}</strong> configured
+            </span>
+          </div>
+        </div>
       )}
 
-      {/* Locations Content */}
+      {/* Locations Scrollable Table Area */}
       {activeTab === 'locations' && (
-        <>
+        <div className="flex-1 min-h-0 flex flex-col bg-white rounded-lg border border-slate-200/90 shadow-2xs overflow-hidden">
           {isLoading ? (
-            <TableSkeleton rows={4} cols={4} />
+            <div className="p-4 flex-1 overflow-auto">
+              <TableSkeleton rows={4} cols={4} />
+            </div>
           ) : filteredLocations.length === 0 ? (
-            <EmptyState
-              icon={<MapPin className="w-8 h-8" />}
-              title="No locations found"
-              description="No facility locations match your search."
-              actionText={canManageLocations ? 'Create First Location' : undefined}
-              onAction={() => {
-                setEditingLocation(null);
-                setIsLocationModalOpen(true);
-              }}
-            />
+            <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
+              <EmptyState
+                icon={<MapPin className="w-8 h-8" />}
+                title="No locations found"
+                description="No facility locations match your search criteria."
+                actionText={canManageLocations ? 'Create First Location' : undefined}
+                onAction={() => {
+                  setEditingLocation(null);
+                  setIsLocationModalOpen(true);
+                }}
+              />
+            </div>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/90 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
+            <div className="flex-1 min-h-0 overflow-auto relative">
+              <table className="w-full text-left text-xs border-collapse min-w-[680px]">
+                <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase tracking-wider text-[11px] shadow-2xs">
                   <tr>
-                    <th className="py-3 px-5">Facility / Site Name</th>
-                    <th className="py-3 px-4">Identifier</th>
-                    <th className="py-3 px-4">Created Date</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-5 text-right">Actions</th>
+                    <th className="py-2.5 px-4 font-bold">Facility / Site Name</th>
+                    <th className="py-2.5 px-4 font-bold">Identifier</th>
+                    <th className="py-2.5 px-4 font-bold">Created Date</th>
+                    <th className="py-2.5 px-4 font-bold">Status</th>
+                    <th className="py-2.5 px-4 font-bold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredLocations.map((l) => (
-                    <tr key={l.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3.5 px-5 font-semibold text-slate-900">{l.name}</td>
-                      <td className="py-3.5 px-4 font-mono text-slate-400 text-[11px]">{l.id}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{l.createdOn || '—'}</td>
-                      <td className="py-3.5 px-4">
+                    <tr key={l.id} className="hover:bg-slate-50/70 transition-colors group">
+                      <td className="py-2.5 px-4 font-semibold text-slate-900">{l.name}</td>
+                      <td className="py-2.5 px-4 font-mono text-slate-400 text-[11px]">{l.id}</td>
+                      <td className="py-2.5 px-4 text-slate-600">{l.createdOn || '—'}</td>
+                      <td className="py-2.5 px-4">
                         <Badge variant={l.isActive ? 'success' : 'neutral'}>
                           {l.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </td>
-                      <td className="py-3.5 px-5 text-right">
+                      <td className="py-2.5 px-4 text-right">
                         {canManageLocations && (
                           <div className="flex items-center justify-end gap-1">
                             <button
+                              type="button"
                               onClick={() => {
                                 setEditingLocation(l);
                                 setIsLocationModalOpen(true);
                               }}
-                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer focus-visible:ring-1 focus-visible:ring-blue-500"
                               title="Edit Location"
+                              aria-label="Edit Location"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
+                              type="button"
                               onClick={() => setDeletingLocation(l)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer focus-visible:ring-1 focus-visible:ring-blue-500"
                               title="Delete Location"
+                              aria-label="Delete Location"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -402,7 +438,14 @@ export const AdminPage: React.FC<AdminPageProps> = ({ initialTab = 'categories' 
               </table>
             </div>
           )}
-        </>
+
+          {/* Stable Summary Footer */}
+          <div className="shrink-0 py-2 px-4 bg-slate-50/80 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center select-none">
+            <span>
+              Locations: <strong className="text-slate-700">{filteredLocations.length}</strong> configured
+            </span>
+          </div>
+        </div>
       )}
 
       {/* Category Modals */}

@@ -106,28 +106,30 @@ export const DashboardPage: React.FC<DashboardProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner / Welcome */}
-      <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-2xl p-6 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-4 sm:space-y-5">
+      {/* Top Welcome / Operations Center Banner */}
+      <div className="bg-slate-900 rounded-xl p-4 sm:p-5 text-white shadow-2xs border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3.5">
         <div>
-          <span className="text-xs uppercase tracking-widest font-semibold text-blue-200">
-            Enterprise Asset Management
+          <span className="text-[11px] uppercase tracking-wider font-bold text-blue-400">
+            Enterprise Operations Center
           </span>
-          <h2 className="text-2xl font-bold mt-1 tracking-tight">System Operations Center</h2>
-          <p className="text-sm text-blue-100/90 mt-1 max-w-xl">
-            Logged in as <span className="font-semibold">{activeRole}</span>. Centralized visibility
-            over hardware inventory, employee requests, custody assignments, and maintenance lifecycles.
+          <h2 className="text-lg sm:text-xl font-bold mt-0.5 tracking-tight">
+            Asset Management & Governance
+          </h2>
+          <p className="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
+            Authenticated as <strong className="text-white font-semibold">{activeRole}</strong>.
+            Centralized visibility over physical IT inventory, employee requisitions, custody assignments, and compliance workflows.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           {hasPermission(AppPermissions.CREATE_REQUEST) && (
             <Button
               variant="primary"
               size="sm"
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Plus className="w-3.5 h-3.5" />}
               onClick={() => onNavigate('requests')}
-              className="bg-white text-blue-900 hover:bg-blue-50 border-none shadow-sm"
+              className="bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
             >
               Request Hardware
             </Button>
@@ -137,9 +139,9 @@ export const DashboardPage: React.FC<DashboardProps> = ({ onNavigate }) => {
             <Button
               variant="outline"
               size="sm"
-              leftIcon={<Plus className="w-4 h-4" />}
+              leftIcon={<Plus className="w-3.5 h-3.5" />}
               onClick={() => onNavigate('assets')}
-              className="text-white border-white/30 hover:bg-white/10"
+              className="text-slate-200 border-slate-700 hover:bg-slate-800 hover:text-white"
             >
               New Asset
             </Button>
@@ -150,9 +152,9 @@ export const DashboardPage: React.FC<DashboardProps> = ({ onNavigate }) => {
             <Button
               variant="outline"
               size="sm"
-              leftIcon={<ClipboardList className="w-4 h-4" />}
+              leftIcon={<ClipboardList className="w-3.5 h-3.5" />}
               onClick={() => onNavigate('approvals')}
-              className="text-white border-white/30 hover:bg-white/10"
+              className="text-slate-200 border-slate-700 hover:bg-slate-800 hover:text-white"
             >
               Review Approvals ({pendingRequests})
             </Button>

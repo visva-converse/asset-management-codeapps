@@ -11,28 +11,56 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ activePage, onSelectPage, children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleSelectPage = (page: ActivePage) => {
+    onSelectPage(page);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
-      {/* Top Header */}
-      <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+    <div className="h-screen w-screen flex flex-col bg-slate-50 text-slate-900 font-sans overflow-hidden antialiased select-auto">
+      {/* Top Application Header */}
+      <Header onMenuToggle={() => setIsMobileMenuOpen((prev) => !prev)} />
 
-      {/* Main Container */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Permission-aware Left Sidebar */}
-        {isSidebarOpen && (
-          <Sidebar activePage={activePage} onSelectPage={onSelectPage} />
+      {/* Main Application Container */}
+      <div className="flex-1 flex min-h-0 overflow-hidden relative">
+        {/* Desktop Fixed Left Sidebar */}
+        <Sidebar activePage={activePage} onSelectPage={handleSelectPage} />
+
+        {/* Mobile / Tablet Slide-out Navigation Drawer */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true">
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-200"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-hidden="true"
+            />
+            {/* Drawer */}
+            <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-slate-900 z-50 shadow-2xl flex flex-col">
+              <Sidebar
+                activePage={activePage}
+                onSelectPage={handleSelectPage}
+                isMobileDrawer={true}
+                onClose={() => setIsMobileMenuOpen(false)}
+              />
+            </div>
+          </div>
         )}
 
-        {/* Content Area */}
-        <main className="flex-1 flex flex-col overflow-y-auto min-w-0">
-          <div className="px-8 py-6 max-w-7xl w-full mx-auto flex-1 flex flex-col">
-            <Breadcrumbs
-              activePage={activePage}
-              onNavigateHome={() => onSelectPage('dashboard')}
-            />
-            <div className="flex-1 mt-2">{children}</div>
+        {/* Main Content Viewport */}
+        <main className="flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-hidden bg-slate-50">
+          <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full px-3.5 sm:px-6 lg:px-8 py-3 sm:py-4 max-w-7xl w-full mx-auto overflow-hidden">
+            <div className="shrink-0">
+              <Breadcrumbs
+                activePage={activePage}
+                onNavigateHome={() => handleSelectPage('dashboard')}
+              />
+            </div>
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+              {children}
+            </div>
           </div>
         </main>
       </div>

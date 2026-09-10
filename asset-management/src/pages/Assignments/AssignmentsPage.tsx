@@ -156,116 +156,138 @@ export const AssignmentsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Asset Assignments</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Monitor custody records, process check-ins, returns, and custody transfers
-          </p>
-        </div>
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      {/* Fixed Page Header & Context (Does NOT scroll) */}
+      <div className="shrink-0 space-y-2.5 mb-3">
+        {/* Title, Badge & Primary Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                Asset Custody & Assignments
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                {filteredAssignments.length} Records
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Monitor physical device custody records, process returns, check-ins, and custody handovers.
+            </p>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
-            onClick={loadAssignments}
-          >
-            Refresh
-          </Button>
-
-          {hasPermission(AppPermissions.ASSIGN_ASSET) && (
+          <div className="flex items-center gap-2 shrink-0">
             <Button
-              variant="primary"
+              variant="outline"
               size="sm"
-              leftIcon={<Plus className="w-4 h-4" />}
-              onClick={() => setIsAssignOpen(true)}
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
+              onClick={loadAssignments}
+              disabled={isLoading}
             >
-              Assign Asset
+              Refresh
             </Button>
-          )}
+
+            {hasPermission(AppPermissions.ASSIGN_ASSET) && (
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<Plus className="w-4 h-4" />}
+                onClick={() => setIsAssignOpen(true)}
+              >
+                Assign Asset
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Filter and Search Bar */}
+        <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-slate-200/90 shadow-2xs">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            <div className="flex-1 min-w-0">
+              <SearchInput
+                value={search}
+                onChange={(val) => {
+                  setSearch(val);
+                  setCurrentPage(1);
+                }}
+                placeholder="Search assignments by asset name, asset ID, or custodian employee..."
+              />
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+              <span className="text-xs text-slate-500 font-medium">Status:</span>
+              <select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="ALL">All Custody Records</option>
+                <option value="Active">Active Custody</option>
+                <option value="Returned">Returned</option>
+                <option value="Transferred">Transferred</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="w-full sm:w-80">
-          <SearchInput
-            value={search}
-            onChange={(val) => {
-              setSearch(val);
-              setCurrentPage(1);
-            }}
-            placeholder="Search by asset name or employee..."
-          />
-        </div>
-
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <span className="text-xs text-slate-500 font-medium">Status:</span>
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="ALL">All Records</option>
-            <option value="Active">Active Custody</option>
-            <option value="Returned">Returned</option>
-            <option value="Transferred">Transferred</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Table */}
-      {isLoading ? (
-        <TableSkeleton rows={5} cols={6} />
-      ) : filteredAssignments.length === 0 ? (
-        <EmptyState
-          icon={<ArrowLeftRight className="w-8 h-8" />}
-          title="No assignments found"
-          description="There are currently no active or historical custody records matching your criteria."
-          actionText={
-            hasPermission(AppPermissions.ASSIGN_ASSET) ? 'Create Assignment' : undefined
-          }
-          onAction={() => setIsAssignOpen(true)}
-        />
-      ) : (
-        <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/90 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider">
+      {/* Scrollable Data Area (ONLY this section vertically scrolls) */}
+      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-lg border border-slate-200/90 shadow-2xs overflow-hidden">
+        {isLoading ? (
+          <div className="p-4 flex-1 overflow-auto">
+            <TableSkeleton rows={5} cols={6} />
+          </div>
+        ) : filteredAssignments.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
+            <EmptyState
+              icon={<ArrowLeftRight className="w-8 h-8" />}
+              title="No assignments found"
+              description="There are currently no active or historical custody records matching your criteria."
+              actionText={
+                hasPermission(AppPermissions.ASSIGN_ASSET) ? 'Create Assignment' : undefined
+              }
+              onAction={() => setIsAssignOpen(true)}
+            />
+          </div>
+        ) : (
+          <div className="flex-1 min-h-0 overflow-auto relative">
+            <table className="w-full text-left text-xs border-collapse min-w-[760px]">
+              {/* Sticky Table Header */}
+              <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase tracking-wider text-[11px] shadow-2xs">
                 <tr>
-                  <th className="py-3 px-5">Hardware Asset</th>
-                  <th className="py-3 px-4">Custodian Employee</th>
-                  <th className="py-3 px-4">Assignment Date</th>
-                  <th className="py-3 px-4">Expected Return</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-5 text-right">Actions</th>
+                  <th className="py-2.5 px-4 font-bold">Hardware Asset</th>
+                  <th className="py-2.5 px-4 font-bold">Custodian Employee</th>
+                  <th className="py-2.5 px-4 font-bold">Assignment Date</th>
+                  <th className="py-2.5 px-4 font-bold">Expected Return</th>
+                  <th className="py-2.5 px-4 font-bold">Status</th>
+                  <th className="py-2.5 px-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedAssignments.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-5">
+                  <tr key={item.id} className="hover:bg-slate-50/70 transition-colors group">
+                    <td className="py-2.5 px-4">
                       <div className="font-semibold text-slate-900">{item.assetName}</div>
                       <div className="text-[11px] text-slate-400 font-mono">
                         Asset ID: {item.assetId}
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-700">
-                      <div className="font-semibold">{item.assignedToName}</div>
-                      <div className="text-[11px] text-slate-400">{item.assignedToEmail}</div>
+                    <td className="py-2.5 px-4 text-slate-700">
+                      <div className="font-semibold text-slate-900">{item.assignedToName}</div>
+                      <div className="text-[11px] text-slate-400 truncate max-w-[160px]">
+                        {item.assignedToEmail}
+                      </div>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600">{item.assignmentDate}</td>
-                    <td className="py-3.5 px-4 text-slate-600">
+                    <td className="py-2.5 px-4 text-slate-600 font-medium whitespace-nowrap">
+                      {item.assignmentDate}
+                    </td>
+                    <td className="py-2.5 px-4 text-slate-600 whitespace-nowrap">
                       {item.expectedReturnDate || 'Indefinite'}
                     </td>
-                    <td className="py-3.5 px-4">{getStatusBadge(item.status)}</td>
-                    <td className="py-3.5 px-5 text-right">
+                    <td className="py-2.5 px-4 whitespace-nowrap">{getStatusBadge(item.status)}</td>
+                    <td className="py-2.5 px-4 text-right whitespace-nowrap">
                       {item.status === 'Active' ? (
                         <div className="flex items-center justify-end gap-1.5">
                           {hasPermission(AppPermissions.TRANSFER_ASSET) && (
@@ -277,6 +299,7 @@ export const AssignmentsPage: React.FC = () => {
                                 setActiveModalItem(item);
                                 setModalMode('transfer');
                               }}
+                              className="text-xs py-1"
                             >
                               Transfer
                             </Button>
@@ -291,6 +314,7 @@ export const AssignmentsPage: React.FC = () => {
                                 setActiveModalItem(item);
                                 setModalMode('return');
                               }}
+                              className="text-xs py-1"
                             >
                               Return
                             </Button>
@@ -307,7 +331,10 @@ export const AssignmentsPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+        )}
 
+        {/* Stable Pagination Footer */}
+        <div className="shrink-0 border-t border-slate-200 bg-white">
           <Pagination
             currentPage={currentPage}
             totalItems={filteredAssignments.length}
@@ -319,7 +346,7 @@ export const AssignmentsPage: React.FC = () => {
             }}
           />
         </div>
-      )}
+      </div>
 
       {/* Assign Modal */}
       <AssignAssetModal
